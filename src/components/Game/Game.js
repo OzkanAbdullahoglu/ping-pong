@@ -9,7 +9,7 @@ import {
   BOT_LEVEL,
   WINNER,
 } from '../../constants';
-import { RED, GREEN } from '../../constants/colors';
+import { RED, GREEN, SELAGO } from '../../constants/colors';
 
 const Game = () => {
   const canvasRef = useRef(null);
@@ -185,7 +185,7 @@ const Game = () => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       move();
-      ctx.fillStyle = '#F9F9F9';
+      ctx.fillStyle = SELAGO;
       ctx.rect(0, 0, canvas.width, canvas.height);
       ctx.fill();
       ctx.beginPath();
@@ -229,12 +229,12 @@ const Game = () => {
   useEffect(() => {
     reqRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(reqRef.current);
-  }, [restartGame]); // Make sure the effect runs only once
+  }, [restartGame]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { playerScore, computerScore } = score;
 
   return (
-    <div className="container">
+    <>
       <>
         <span className="score">
           Player: {playerScore} | Computer: {computerScore}
@@ -257,7 +257,7 @@ const Game = () => {
           Play again
         </button>
       ) : null}
-    </div>
+    </>
   );
 };
 
