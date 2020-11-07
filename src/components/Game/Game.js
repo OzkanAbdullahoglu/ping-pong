@@ -20,6 +20,8 @@ const Game = () => {
   };
   const speed = SPEED;
   const beatMe = BOT_LEVEL;
+  // most possbile ball bouncing back angle
+  const maxAngle = (75 / 180) * Math.PI;
   const [score, setScore] = useState({ ...defaultScore });
   const [restartGame, setRestartGame] = useState(false);
   const animate = () => {
@@ -50,6 +52,7 @@ const Game = () => {
       freeze: false,
       radius: Math.round((canvas.height / 25 + Number.EPSILON) * 100) / 100,
     };
+
     const keys = {
       ArrowUp: false,
       ArrowDown: false,
@@ -66,7 +69,6 @@ const Game = () => {
         keys[event.code] = false;
       }
     };
-
     const resetGame = () => {
       ball.x = canvas.width / 2;
       ball.y = canvas.height / 2;
@@ -79,7 +81,6 @@ const Game = () => {
       computer.x = canvas.width - PADDLE_WIDTH;
       computer.y = canvas.height / 2;
     };
-
     const getWinner = () => {
       const { playerScore, computerScore } = score;
       if (playerScore === WINNER) return 'player';
@@ -93,11 +94,11 @@ const Game = () => {
       ball.vX = currSpeed / 2;
       ball.vY = -currSpeed / 2;
     };
+
     const updateBallPos = () => {
       ball.y += ball.vY;
       ball.x += ball.vX;
     };
-
     const move = () => {
       // Start a new game
       if (keys.Space && ball.freeze && !getWinner()) {
@@ -156,21 +157,31 @@ const Game = () => {
         resetGame();
       }
       // ball collusion with paddles && bouncing back
+      // rather bouncing with a constant 45 degree
+      // bounce up to the range of ball to the paddle
+
       if (
         ball.x - ball.radius / 2 <= player.x + player.width &&
         ball.y >= player.y - player.height / 2 &&
         ball.y <= player.y + player.height / 2
       ) {
-        ball.vY *= -1;
+        const ballRange = (ball.y - player.y) / (player.height / 2);
+        const angle = ballRange * maxAngle;
+        ball.vX = ball.vMax * Math.cos(angle);
+        ball.vY = ball.vMax * Math.sin(angle);
       }
       if (
         ball.x + ball.radius / 2 >= canvas.width - player.width &&
         ball.y >= computer.y - computer.height / 2 &&
         ball.y <= computer.y + computer.height / 2
       ) {
-        ball.vY *= -1;
+        const ballRange = (ball.y - computer.y) / (computer.height / 2);
+        const angle = ballRange * maxAngle;
+        ball.vX = -ball.vMax * Math.cos(angle);
+        ball.vY = ball.vMax * Math.sin(angle);
       }
     };
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       move();
@@ -181,6 +192,13 @@ const Game = () => {
       renderPaddleLeft(ctx, player);
       renderPaddleRight(ctx, computer);
       renderBall(ctx, ball.radius, { x: ball.x, y: ball.y }, canvas);
+      //debug on canvas
+      //   let output = `BallR ${ball.radius} Player 1 X ${player.x} Y ${
+      //     player.y
+      //   } Player 2 X ${computer.x} Y ${
+      //     Math.round((computer.y + Number.EPSILON) * 100) / 100
+      //   } VComp ${Math.round((computer.speed + Number.EPSILON) * 100) / 100}`;
+
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
       if (getWinner()) {
@@ -211,7 +229,7 @@ const Game = () => {
   useEffect(() => {
     reqRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(reqRef.current);
-  }, [restartGame]);
+  }, [restartGame]); // Make sure the effect runs only once
 
   const { playerScore, computerScore } = score;
 
